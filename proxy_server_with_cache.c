@@ -91,4 +91,67 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
+    //if created then we can reuse it..
+    int resuse = 1;
+    if(setsockopt(proxy_socketID, SOL_SOCKET, SO_REUSEADDR, (const char*)&resuse, sizeof(resuse) < 0)){
+        perror("Failed to set socket options : (setsockopt-failed)");
+        exit(1);
+    }
+
+    //each struct we define have garbage vaules on initialization so wee need to clean that and assign values
+    //bzero makes all values 0
+    bzero((char *)&server_address, sizeof(server_address));
+    server_address.sin_family = AF_INET;//address family - ipv4
+    server_address.sin_port = htons(port_number); //htons-it converts into number that netweork can understand like 8080 to 0x8080 etc..
+    server_address.sin_addr.s_addr = INADDR_ANY; //any address can connect to this server
+
+    //now binding the socket to the address
+    if(bind(proxy_socketID, (struct sockaddr*)&server_address, sizeof(server_address)) < 0){
+        perror("Port is not available");
+        exit(1);
+    }
+
+    printf("Binding on port %d\n", port_number);
+    printf("Proxy server is now listening on port %d\n", port_number);
+
+    //listening to the port for clients
+    int listen_status = listen(proxy_socketID, MAX_CLIENTS);
+    if(listen_status < 0){
+        perror("Failed to listen\n");
+        exit(1);
+    }
+
+    //defining iterator for nu. of connected clients
+    int client_count = 0;
+    int Connected_socketID[MAX_CLIENTS];
+
+    while(1){
+        bzero((char*)&client_address, sizeof(client_address));//cleaned the client address and removed the garbage values
+        client_length = sizeof(client_address);//storing the final length of the client address
+
+        client_socketdID = accept(proxy_socketID,(struct sockaddr*)&client_address, (socklen_t*)&client_length);//accepting the client connection
+
+        if(client_socketdID < 0){
+            perror("Failed to accept the client connection");
+            exit(1);
+        }else{
+            //adding the client to the connected clients list
+            Connected_socketID[client_count] = client_socketdID;
+        }
+
+        printf("Client %d connected\n", client_count);
+
+
+        //creating a pointer to the client address
+        //typecased into sockaddr_in for easy access and because we know the client address is of type sockaddr_in
+        struct sockaddr_in* client_pointer = (struct sockaddr_in*)&client_address;
+        struct in_addr client_ip = client_pointer->sin_addr;//getting the client ip address
+        char client_ip_address_str[INET_ADDRSTRLEN];//defining the ip address of the client
+        inet_ntop(AF_INET, &client_ip, client_ip_address_str, INET_ADDRSTRLEN);//converting the ip address to string
+        //inet_ntop is used to convert the ip address from newtowk format to presentation format
+
+        printf("Client is connected on port %d with IP address %s\n", ntohs(client_pointer->sin_port), client_ip_address_str);
+
+        //todo:creaate threads for each client
+    }
 } 
