@@ -22,6 +22,7 @@
 
 
 #define MAX_CLIENTS 10
+#define MAX_BYTES 10*(1<<10) //2^10=1024
 typedef struct cache_element cache_element;
 
 // lru cache (one element with linked list)
@@ -59,6 +60,120 @@ pthread_mutex_t lock;
 //defining the cache head
 cache_element *cache_head = NULL;
 int cache_size;//replace with the size of the cache
+
+
+
+//thread function
+void *thread_fn(void *newSocket){
+    sem_wait(&semaphore);//wait for the semaphore to be available
+    int p;
+    sem_getvalue(&semaphore, &p);
+    printf("Semaphore value: %d\n", p);
+
+    int *t=(int*)newSocket;
+    int socket = *t;
+
+    int bytes_received_client,recv_len;
+
+    char* buffer = (char*)calloc(MAX_BYTES,sizeof(char));
+    bzero(buffer,MAX_BYTES);
+    bytes_received_client = recv(socket,buffer,MAX_BYTES,0);//recieve the data from the client
+
+
+    while(bytes_received_client > 0){
+        recv_len=strlen(buffer);
+        printf("Received from client: %s\n",buffer);
+
+        if(substr(buffer,"\r\n\r\n")==NULL){ //"\r\n\r\n" this indicates the end of the request from header
+            bytes_received_client = recv(socket,buffer+recv_len,MAX_BYTES-recv_len,0);
+        }else{
+            break;
+        }
+    }
+
+    //now we have the request from the client
+    //we need to parse the request
+
+    //so first we make a copy of it so that later we can use it to search in cache
+    char *tempReq = (char *)malloc(strlen(buffer)*sizeof(char)+1);//it allocates memory for the request and store it in tempReq pointer
+    for(int i=0;i<strlen(buffer);i++){
+        tempReq[i] = buffer[i];
+    }
+
+
+    struct cache_element *temp = find(tempReq);//search the cache for the request
+    if(temp != NULL){
+        //if the request is found in the cache
+        //then we can send the data to the client
+        int size = temp->len/sizeof(char); //size of the data
+        //exaample: if the data is "hello" then size(actual) will be 20  and if char is of 4 bytes then size will be 5(characters we can say)
+        int pos = 0;
+        char response[MAX_BYTES];
+        while(pos<size){
+            bzero(response,MAX_BYTES);
+            for(int i=0;i<MAX_BYTES && pos<size;i++){
+                response[i] = temp->data[pos];
+                pos++;
+            }
+            send(socket,response,strlen(response),0);//send data to socket
+        }
+
+        printf("Data received from cache\n");
+        printf("Data sent to client: ");
+        printf("%s\n\n",response);
+    }else if(bytes_received_client > 0){//if the request is not found in the cache
+        //then we need to send the request to the server
+        //and then cache the response
+        //so first we need to parse the request
+        recv_len = strlen(buffer);
+        ParsedRequest *req = ParsedRequest_create(); //to fetch the request and headers
+
+        if(ParsedRequest_parse(req,buffer,recv_len) < 0){
+            printf("Failed to parse the request\n");
+            exit(1);
+        }else{
+            bzero(buffer,MAX_BYTES);
+            if(strcmp(req->method,"GET")>0){
+                //if the request is not a GET request
+                //then we need to send a bad request response to the client
+                char *bad_request = "HTTP/1.1 400 Bad Request\r\n\r\n";
+                send(socket,bad_request,strlen(bad_request),0);
+                printf("Bad request\n"); 
+            }else if(!strcmp(req->method,"GET")){
+                if(req->host && req->path && checkHTTPversion(req->version)==1){//httpversion checks only http ver 1.0
+                    //todo: handle request
+                    bytes_received_client = handle_request(socket,req,tempReq);
+
+                    if(bytes_received_client < 0){
+                        sendErrorMessages(socket,500);
+                    }
+                }else{
+                    sendErrorMessages(socket,500);
+                }
+
+            }else{
+                printf("Method not supported apart from GET\n");
+            }
+        }
+
+        ParsedRequest_destroy(req);//destroy the request object after use
+    }else{
+        printf("Failed to receive request from client\n");
+        if(bytes_received_client == 0){
+            printf("Client disconnected\n");
+            shutdown(socket,SHUT_RDWR);
+            close(socket);
+            free(buffer);
+            sem_post(&semaphore);//sem_signal
+            sem_getvalue(&semaphore, &p);
+            printf("Semaphore post value is: %d\n", p);
+            free(tempReq);
+            return NULL;
+        }
+
+    }
+
+}
 
 
 int main(int argc, char *argv[]){
@@ -153,5 +268,10 @@ int main(int argc, char *argv[]){
         printf("Client is connected on port %d with IP address %s\n", ntohs(client_pointer->sin_port), client_ip_address_str);
 
         //todo:creaate threads for each client
+        pthread_create(&tid[client_count],NULL,thread_fn,(void*)&Connected_socketID[client_count]);
+        client_count++;
     }
+
+    close(proxy_socketID);
+    return 0;
 } 
