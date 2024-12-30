@@ -62,6 +62,25 @@ cache_element *cache_head = NULL;
 int cache_size;//replace with the size of the cache
 
 
+int connectRemoteServer(char* host_address,int port_number){
+    int remoteSocketID = socket(AF_INET,SOCK_STREAM,0);//socket for the remote server
+    if(remoteSocketID < 0){
+        perror("Failed to create a socket for the remote server\n");
+        return -1;
+    }
+
+    struct hostent* host = gethostbyname(host_address);//this will return host adrresses from local stored in my computer.  It stores mapping of hostnames to ip addresses
+    if(host == NULL){
+        perror("Failed to get the host\n");
+        return -1;
+    }
+
+    struct sockaddr_in remote_address;
+    bzero((char*)&remote_address,sizeof(remote_address));
+    remote_address.sin_family = AF_INET;
+    remote_address.sin_port = htons(port_number);
+    bcopy((char*)host->h_addr,(char*)&remote_address.sin_addr.s_addr,host->h_length);
+}
 
 int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempReq){
     char* buff = (char*)malloc(sizeof(char)*MAX_BYTES);
