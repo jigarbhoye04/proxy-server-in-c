@@ -63,6 +63,42 @@ int cache_size;//replace with the size of the cache
 
 
 
+int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempReq){
+    char* buff = (char*)malloc(sizeof(char)*MAX_BYTES);
+    strcpy(buff,"GET");
+    strcat(buff,request->path);
+    strcat(buff," ");
+    strcat(buff,request->version);
+    strcat(buff,"\r\n");
+    size_t len = strlen(buff);
+
+    if(ParsedHeader_set(request,"Connection","close") < 0){
+        printf("Failed to set the connection\n");
+        printf(" or set header key is not working\n");
+        return -1;
+    }
+
+    if(ParsedHeader_get(request,"Host") != NULL){
+        if(ParsedHeader_set(request,"Host",request->host) < 0){
+            printf("Failed to set the host\n");
+            return -1;
+        }
+    }
+
+    if(ParsedRequest_unparse_headers(request,buff+len,(size_t)(MAX_BYTES)-len) < 0){
+        printf("Failed to unparse the headers\n");
+        printf(" or unparse headers is not working\n");
+        return -1;
+    }
+
+    int server_port = 80;//http always runs on port 80
+    if(request->port != NULL){
+        server_port = atoi(request->port);
+    }
+    int remoteSocketID = connectRemoteServer(request->host,server_port);
+}
+
+
 //thread function
 void *thread_fn(void *newSocket){
     sem_wait(&semaphore);//wait for the semaphore to be available
@@ -126,7 +162,7 @@ void *thread_fn(void *newSocket){
         //and then cache the response
         //so first we need to parse the request
         recv_len = strlen(buffer);
-        ParsedRequest *req = ParsedRequest_create(); //to fetch the request and headers
+        struct ParsedRequest *req = ParsedRequest_create(); //to fetch the request and headers
 
         if(ParsedRequest_parse(req,buffer,recv_len) < 0){
             printf("Failed to parse the request\n");
