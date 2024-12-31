@@ -26,8 +26,7 @@
 typedef struct cache_element cache_element;
 
 // lru cache (one element with linked list)
-struct cache_element
-{
+struct cache_element{
     char *data;            // response data
     int len;               // length of data
     char *url;             // reuested url
@@ -79,7 +78,16 @@ int connectRemoteServer(char* host_address,int port_number){
     bzero((char*)&remote_address,sizeof(remote_address));
     remote_address.sin_family = AF_INET;
     remote_address.sin_port = htons(port_number);
-    bcopy((char*)host->h_addr,(char*)&remote_address.sin_addr.s_addr,host->h_length);
+    //copy the host address to the remote address
+    bcopy((char*)&host->h_addr,(char*)&remote_address.sin_addr.s_addr,host->h_length);
+
+    //if unable to connect to the remote server
+    if(connect(remoteSocketID,(struct sockaddr*)&remote_address, (size_t)sizeof(remote_address)) < 0){
+        perror("Failed to connect to the remote server\n");
+        return -1;
+    }
+
+    return remoteSocketID;
 }
 
 int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempReq){
@@ -115,6 +123,61 @@ int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempRe
         server_port = atoi(request->port);
     }
     int remoteSocketID = connectRemoteServer(request->host,server_port);
+
+    //for safety check
+    if(remoteSocketID < 0){
+        printf("Failed to connect to the remote server\n");
+        return -1;
+    }
+
+
+    int bytes_to_send = send(remoteSocketID,buff,strlen(buff),0);
+    bzero(buff,MAX_BYTES);
+
+    if(bytes_to_send < 0){
+        printf("Failed to send the request to the remote server\n");
+        return -1;
+    }
+
+    int bytes_received = recv(remoteSocketID,buff,MAX_BYTES-1,0);//-1 because to not read the last byte that is "/0"
+
+    if(bytes_received < 0){
+        printf("Failed to receive the response from the remote server\n");
+        return -1;
+    }
+
+
+    char* tempBuff = (char *)malloc(sizeof(char)*MAX_BYTES);
+
+    int temp_buffer_size = MAX_BYTES;
+    int temp_buffer_index = 0;
+
+    while(bytes_received > 0){
+        bytes_received = send(clientSocketID,buff,bytes_received,0);
+        //if the data is not sent then we need to receive the data again
+        for(int i=0;i<bytes_received/sizeof(char);i++){
+            tempBuff[temp_buffer_index] = buff[i];
+            temp_buffer_index++;
+        }
+        temp_buffer_size += bytes_received;
+        tempBuff = (char*)realloc(tempBuff,temp_buffer_size);
+
+        if(bytes_received < 0){
+            printf("Failed to send the response to the client\n");
+            break;
+        }
+
+        bzero(buff,MAX_BYTES);
+        bytes_received = recv(remoteSocketID,buff,MAX_BYTES-1,0);
+
+    }
+    
+    tempBuff[temp_buffer_index] = '\0';//null terminating the buffer
+    free(buff);
+    add_cache_element(tempBuff,strlen(tempBuff),tempReq);
+    free(tempBuff);
+    close(remoteSocketID);
+    return 0;
 }
 
 
