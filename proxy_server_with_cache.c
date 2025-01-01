@@ -439,7 +439,40 @@ int main(int argc, char *argv[]){
     return 0;
 } 
 
+cache_element *find(char *url){
+    cache_element *site = NULL;
+    int temp_lock_status = pthread_mutex_lock(&lock);//lock the cache
+    if(temp_lock_status != 0){
+        perror("Failed to lock the cache\n");
+        return NULL;
+    }
 
+    printf("Remove cache lock acquired %d\n",temp_lock_status);
+    
+    if(cache_head != NULL){
+        site = cache_head;
+        while(site != NULL){
+            if(strcmp(site->url,url) == 0){
+                printf("LRU Time Track before: %ld\n",site->lru_time_track);
+                printf("Cache hit or Cache Found!\n");
+                site->lru_time_track = time(NULL);
+                printf("LRU Time Track after: %ld\n",site->lru_time_track);
+                break;
+            }
+            site = site->next;
+        }
+    }else{
+        printf("Cache is empty or URL not found\n");
+    }
+
+    temp_lock_status = pthread_mutex_unlock(&lock);//unlock the cache
+    if(temp_lock_status != 0){
+        perror("Failed to unlock the cache\n");
+        return NULL;
+    }
+    printf("Remove cache lock released %d\n",temp_lock_status);
+    return site;
+}
 
 
 
