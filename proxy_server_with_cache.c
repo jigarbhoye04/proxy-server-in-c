@@ -184,6 +184,48 @@ int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempRe
 }
 
 
+int checkHTTPversion(char *version){
+    if(version == NULL){
+        return 0;
+    }
+    if(strcmp(version,"HTTP/1.0") == 0){
+        return 1;
+    }
+    if(strcmp(version,"HTTP/1.1") == 0){
+        return 1;
+    }
+    return 0;
+}
+
+
+void sendErrorMessages(int socket, int error_code){
+    char *error_message = (char*)malloc(sizeof(char)*MAX_BYTES);
+    bzero(error_message,MAX_BYTES);
+    if(error_code == 400){
+        strcpy(error_message,"HTTP/1.1 400 Bad Request\r\n\r\n");
+    }else if(error_code == 500){
+        strcpy(error_message,"HTTP/1.1 500 Internal Server Error\r\n\r\n");
+    }else if(error_code == 501){
+        strcpy(error_message,"HTTP/1.1 501 Not Implemented\r\n\r\n");
+    }else if(error_code == 502){
+        strcpy(error_message,"HTTP/1.1 502 Bad Gateway\r\n\r\n");
+    }else if(error_code == 503){
+        strcpy(error_message,"HTTP/1.1 503 Service Unavailable\r\n\r\n");
+    }else if(error_code == 504){
+        strcpy(error_message,"HTTP/1.1 504 Gateway Timeout\r\n\r\n");
+    }else if(error_code == 505){
+        strcpy(error_message,"HTTP/1.1 505 HTTP Version Not Supported\r\n\r\n");
+    }else{
+        strcpy(error_message,"HTTP/1.1 400 Bad Request\r\n\r\n");
+    }
+
+    printf("%s", error_message);
+    free(error_message);
+
+    return 0;
+}
+
+
 //thread function
 void *thread_fn(void *newSocket){
     sem_wait(&semaphore);//wait for the semaphore to be available
