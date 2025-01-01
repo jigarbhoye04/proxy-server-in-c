@@ -23,6 +23,9 @@
 
 #define MAX_CLIENTS 10
 #define MAX_BYTES 10*(1<<10) //2^10=1024
+#define MAX_ELEMENT_SIZE 10*(2<<10) 
+#define MAX_CACHE_SIZE 200*(1<<20) // 200*(10^20)
+
 typedef struct cache_element cache_element;
 
 // lru cache (one element with linked list)
@@ -393,3 +396,85 @@ int main(int argc, char *argv[]){
     close(proxy_socketID);
     return 0;
 } 
+
+
+
+
+
+// //self, check once again if error is there
+// int add_cache_element(char *data, int size, char *url){
+//     cache_element *new_element = (cache_element*)malloc(sizeof(cache_element));
+//     new_element->data = (char*)malloc(sizeof(char)*size);
+//     new_element->url = (char*)malloc(sizeof(char)*strlen(url));
+//     new_element->len = size;
+//     new_element->lru_time_track = time(NULL);
+//     new_element->next = NULL;
+
+//     for(int i=0;i<size;i++){
+//         new_element->data[i] = data[i];
+//     }
+
+//     for(int i=0;i<strlen(url);i++){
+//         new_element->url[i] = url[i];
+//     }
+
+//     int temp_lock_status = pthread_mutex_lock(&lock);//lock the cache
+//     if(temp_lock_status != 0){
+//         perror("Failed to lock the cache\n");
+//         return -1;
+//     }
+
+//     printf("Add cache lock acquired %d\n",temp_lock_status);
+
+//     if(cache_head == NULL){
+//         cache_head = new_element;
+//     }else{
+//         cache_element *temp = cache_head;
+//         while(temp->next != NULL){
+//             temp = temp->next;
+//         }
+//         temp->next = new_element;
+//     }
+
+//     temp_lock_status = pthread_mutex_unlock(&lock);//unlock the cache
+//     if(temp_lock_status != 0){
+//         perror("Failed to unlock the cache\n");
+//         return -1;
+//     }
+//     printf("Add cache lock released %d\n",temp_lock_status);
+//     return 0;
+// }
+
+
+int add_cache_element(char *data,int size,char *url){
+    int temp_lock_status = pthread_mutex_lock(&lock);
+    printf("Add cache lock acquired %d\n",temp_lock_status);
+    int element_size = size+1+strlen(url)+sizeof(cache_element);
+
+
+    if(element_size < MAX_ELEMENT_SIZE){
+        temp_lock_status = pthread_mutex_unlock(&lock);
+        printf("Add cache lock released/unlocked %d\n",temp_lock_status);
+        return 0;
+    }else{
+        while(cache_size + element_size > MAX_CACHE_SIZE){
+            remove_cache_elements();//todo
+        }
+
+        cache_element *new_element = (cache_element*)malloc(sizeof(cache_element));
+        new_element->data = (char*)malloc(sizeof(char)*(size+1));
+        strcpy(new_element->data,data);
+        new_element->url = (char*)malloc(1+(strlen(url)*sizeof(char)));
+        strcpy(new_element->url,url);
+        new_element->lru_time_track = time(NULL);
+        new_element->next = cache_head;
+        new_element->len = size;
+        cache_head = new_element;
+
+        cache_size += element_size;
+
+        temp_lock_status = pthread_mutex_unlock(&lock);//unlock the cache
+        printf("Add cache lock released/unlocked %d\n",temp_lock_status);
+    }
+    return 0;
+}
