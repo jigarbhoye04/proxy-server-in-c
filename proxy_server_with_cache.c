@@ -324,7 +324,7 @@ void *thread_fn(void *newSocket){
         printf("Failed to receive request from client\n");
         if(bytes_received_client == 0){
             printf("Client disconnected\n");
-            shutdown(socket,SHUT_RDWR);
+            shutdown(socket, SD_BOTH); //SHUT_RDWR is not defined in windows so that's why we use SD_BOTH to close the socket
             close(socket);
             free(buffer);
             sem_post(&semaphore);//sem_signal
@@ -472,6 +472,52 @@ cache_element *find(char *url){
     }
     printf("Remove cache lock released %d\n",temp_lock_status);
     return site;
+}
+
+//cache is full so we have to remove elements from cache.
+void remove_cache_element(){
+    //two pointers to keep track of the cache
+    cache_element *p;
+    cache_element *q;
+
+    //to keep track of the least recently used element and delete some node
+    cache_element *temp;
+
+    int temp_lock_val = pthread_mutex_lock(&lock);//lock the cache
+    if(temp_lock_val != 0){
+        perror("Failed to lock the cache\n");
+        return;
+    }
+    printf("Remove cache lock acquired %d\n",temp_lock_val);
+
+    if(cache_head!=NULL){
+        for(p=cache_head,q=cache_head; q->next!=NULL; q=q->next){
+            if((q->next)->lru_time_track < temp->lru_time_track){
+                temp = q->next;
+                p=q;
+            }
+        }
+
+        if(temp == cache_head){
+            cache_head = cache_head->next;
+        }else{
+            p->next = temp->next;
+        }
+        //if cache is not empty then searches for th node which has the least lru_time_track and deletes it
+
+        cache_size = cache_size - (temp->len + strlen(temp->url) + sizeof(cache_element));
+        free(temp->data);
+        free(temp->url);
+        free(temp);
+    }
+
+    temp_lock_val = pthread_mutex_unlock(&lock);
+    if(temp_lock_val != 0){
+        perror("Failed to unlock the cache\n");
+        return;
+    }
+    printf("Remove cache lock released %d\n",temp_lock_val);
+    return;
 }
 
 

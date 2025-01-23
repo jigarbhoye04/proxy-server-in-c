@@ -1,0 +1,8 @@
+{
+    "makefile.configurations": [
+        {
+            "cmake.cmakePath": "/path/to/cmake",
+            "name": "Unnamed configuration 1"
+        }
+    ]
+}
