@@ -1,4 +1,4 @@
-#include "include/proxy_parse.h"
+#include "../include/proxy_parse.h"
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -19,6 +19,52 @@
 // #include <netdb.h>
 // #include <arpa/inet.h>
 // #include <sys/wait.h>
+
+// FIXED: Add missing function implementations for Windows compatibility
+void bzero(void *s, size_t n) {
+    memset(s, 0, n);
+}
+
+void bcopy(const void *src, void *dest, size_t n) {
+    memcpy(dest, src, n);
+}
+
+char *substr(char *str, char *substr_to_find) {
+    return strstr(str, substr_to_find);
+}
+
+// Simple stubs for proxy_parse functions - you'll need the real implementation
+struct ParsedRequest* ParsedRequest_create() {
+    return (struct ParsedRequest*)calloc(1, sizeof(struct ParsedRequest));
+}
+
+void ParsedRequest_destroy(struct ParsedRequest *pr) {
+    if(pr) {
+        if(pr->buf) free(pr->buf);
+        // Free other allocated fields as needed
+        free(pr);
+    }
+}
+
+int ParsedRequest_parse(struct ParsedRequest * parse, const char *buf, int buflen) {
+    // Simplified parser - you'll need the real implementation
+    return 0; // Stub return
+}
+
+int ParsedRequest_unparse_headers(struct ParsedRequest *pr, char *buf, size_t buflen) {
+    // Simplified implementation
+    return 0; // Stub return
+}
+
+int ParsedHeader_set(struct ParsedRequest *pr, const char * key, const char * value) {
+    // Simplified implementation
+    return 0; // Stub return
+}
+
+struct ParsedHeader* ParsedHeader_get(struct ParsedRequest *pr, const char * key) {
+    // Simplified implementation
+    return NULL; // Stub return
+}
 
 
 #define MAX_CLIENTS 10
@@ -95,6 +141,10 @@ int connectRemoteServer(char* host_address,int port_number){
 
 int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempReq){
     char* buff = (char*)malloc(sizeof(char)*MAX_BYTES);
+    if(buff == NULL) { // FIXED: Check malloc return value
+        printf("Failed to allocate memory for request buffer\n");
+        return -1;
+    }
     strcpy(buff,"GET");
     strcat(buff,request->path);
     strcat(buff," ");
@@ -105,12 +155,14 @@ int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempRe
     if(ParsedHeader_set(request,"Connection","close") < 0){
         printf("Failed to set the connection\n");
         printf(" or set header key is not working\n");
+        free(buff); // FIXED: Free allocated memory before returning
         return -1;
     }
 
     if(ParsedHeader_get(request,"Host") != NULL){
         if(ParsedHeader_set(request,"Host",request->host) < 0){
             printf("Failed to set the host\n");
+            free(buff); // FIXED: Free allocated memory before returning
             return -1;
         }
     }
@@ -118,6 +170,7 @@ int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempRe
     if(ParsedRequest_unparse_headers(request,buff+len,(size_t)(MAX_BYTES)-len) < 0){
         printf("Failed to unparse the headers\n");
         printf(" or unparse headers is not working\n");
+        free(buff); // FIXED: Free allocated memory before returning
         return -1;
     }
 
@@ -130,6 +183,7 @@ int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempRe
     //for safety check
     if(remoteSocketID < 0){
         printf("Failed to connect to the remote server\n");
+        free(buff); // FIXED: Free allocated memory before returning
         return -1;
     }
 
@@ -139,6 +193,7 @@ int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempRe
 
     if(bytes_to_send < 0){
         printf("Failed to send the request to the remote server\n");
+        free(buff); // FIXED: Free allocated memory before returning
         return -1;
     }
 
@@ -146,11 +201,17 @@ int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempRe
 
     if(bytes_received < 0){
         printf("Failed to receive the response from the remote server\n");
+        free(buff); // FIXED: Free allocated memory before returning
         return -1;
     }
 
 
     char* tempBuff = (char *)malloc(sizeof(char)*MAX_BYTES);
+    if(tempBuff == NULL) { // FIXED: Check malloc return value
+        printf("Failed to allocate memory for tempBuff\n");
+        free(buff);
+        return -1;
+    }
 
     int temp_buffer_size = MAX_BYTES;
     int temp_buffer_index = 0;
@@ -159,11 +220,21 @@ int handle_request(int clientSocketID,struct ParsedRequest *request,char* tempRe
         bytes_received = send(clientSocketID,buff,bytes_received,0);
         //if the data is not sent then we need to receive the data again
         for(int i=0;i<bytes_received/sizeof(char);i++){
-            tempBuff[temp_buffer_index] = buff[i];
-            temp_buffer_index++;
+            // FIXED: Check bounds to prevent buffer overflow
+            if(temp_buffer_index < temp_buffer_size - 1) {
+                tempBuff[temp_buffer_index] = buff[i];
+                temp_buffer_index++;
+            }
         }
         temp_buffer_size += bytes_received;
-        tempBuff = (char*)realloc(tempBuff,temp_buffer_size);
+        char* new_buff = (char*)realloc(tempBuff, temp_buffer_size); // FIXED: Check realloc return
+        if(new_buff == NULL) {
+            printf("Failed to reallocate memory\n");
+            free(tempBuff);
+            free(buff);
+            return -1;
+        }
+        tempBuff = new_buff;
 
         if(bytes_received < 0){
             printf("Failed to send the response to the client\n");
@@ -220,9 +291,10 @@ void sendErrorMessages(int socket, int error_code){
     }
 
     printf("%s", error_message);
+    send(socket, error_message, strlen(error_message), 0); // FIXED: Actually send the error message
     free(error_message);
 
-    return 0;
+    return; // FIXED: void function should not return a value
 }
 
 
@@ -259,9 +331,16 @@ void *thread_fn(void *newSocket){
 
     //so first we make a copy of it so that later we can use it to search in cache
     char *tempReq = (char *)malloc(strlen(buffer)*sizeof(char)+1);//it allocates memory for the request and store it in tempReq pointer
+    if(tempReq == NULL) { // FIXED: Check malloc return value
+        printf("Failed to allocate memory for tempReq\n");
+        free(buffer);
+        sem_post(&semaphore);
+        return NULL;
+    }
     for(int i=0;i<strlen(buffer);i++){
         tempReq[i] = buffer[i];
     }
+    tempReq[strlen(buffer)] = '\0'; // FIXED: Proper null termination
 
 
     struct cache_element *temp = find(tempReq);//search the cache for the request
@@ -324,17 +403,19 @@ void *thread_fn(void *newSocket){
         printf("Failed to receive request from client\n");
         if(bytes_received_client == 0){
             printf("Client disconnected\n");
-            shutdown(socket, SD_BOTH); //SHUT_RDWR is not defined in windows so that's why we use SD_BOTH to close the socket
-            close(socket);
-            free(buffer);
-            sem_post(&semaphore);//sem_signal
-            sem_getvalue(&semaphore, &p);
-            printf("Semaphore post value is: %d\n", p);
-            free(tempReq);
-            return NULL;
         }
-
     }
+
+    // FIXED: Cleanup and return properly
+    shutdown(socket, SD_BOTH); 
+    close(socket);
+    free(buffer);
+    free(tempReq);
+    sem_post(&semaphore);//sem_signal
+    int sem_val; // FIXED: Different variable name to avoid redeclaration
+    sem_getvalue(&semaphore, &sem_val);
+    printf("Semaphore post value is: %d\n", sem_val);
+    return NULL;
 
 }
 
@@ -343,14 +424,16 @@ int main(int argc, char *argv[]){
     int client_socketdID, client_length; // client socket id and length
     struct sockaddr_in server_address, client_address; // server and client address
 
-    //initializing the semaphore
-    sem_init(&semaphore, MAX_CLIENTS,0);
+    //initializing the semaphore (FIXED: correct parameters)
+    // sem_init(semaphore, pshared, value)
+    // pshared=0 for threads in same process, value=MAX_CLIENTS for available slots
+    sem_init(&semaphore, 0, MAX_CLIENTS);
     
     //initialize the mutex lock
     pthread_mutex_init(&lock, NULL);
 
     //check if the port number is provided
-    if(argv == 2){
+    if(argc == 2){ // FIXED: Use argc instead of argv for argument count
         // ./proxy <port number>
         port_number = atoi(argv[1]);
     }else{
@@ -453,10 +536,10 @@ cache_element *find(char *url){
         site = cache_head;
         while(site != NULL){
             if(strcmp(site->url,url) == 0){
-                printf("LRU Time Track before: %ld\n",site->lru_time_track);
+                printf("LRU Time Track before: %lld\n",(long long)site->lru_time_track); // FIXED: Correct format specifier
                 printf("Cache hit or Cache Found!\n");
                 site->lru_time_track = time(NULL);
-                printf("LRU Time Track after: %ld\n",site->lru_time_track);
+                printf("LRU Time Track after: %lld\n",(long long)site->lru_time_track); // FIXED: Correct format specifier
                 break;
             }
             site = site->next;
@@ -491,6 +574,9 @@ void remove_cache_element(){
     printf("Remove cache lock acquired %d\n",temp_lock_val);
 
     if(cache_head!=NULL){
+        // FIXED: Initialize temp properly
+        temp = cache_head; // Start with first element as the least recently used
+        
         for(p=cache_head,q=cache_head; q->next!=NULL; q=q->next){
             if((q->next)->lru_time_track < temp->lru_time_track){
                 temp = q->next;
@@ -572,14 +658,14 @@ int add_cache_element(char *data,int size,char *url){
     printf("Add cache lock acquired %d\n",temp_lock_status);
     int element_size = size+1+strlen(url)+sizeof(cache_element);
 
-
-    if(element_size < MAX_ELEMENT_SIZE){
+    // FIXED: Logic error - should cache if element is SMALLER than max size
+    if(element_size > MAX_ELEMENT_SIZE){
         temp_lock_status = pthread_mutex_unlock(&lock);
-        printf("Add cache lock released/unlocked %d\n",temp_lock_status);
+        printf("Element too large to cache - Add cache lock released/unlocked %d\n",temp_lock_status);
         return 0;
     }else{
         while(cache_size + element_size > MAX_CACHE_SIZE){
-            remove_cache_elements();//todo
+            remove_cache_element(); // FIXED: Correct function name
         }
 
         cache_element *new_element = (cache_element*)malloc(sizeof(cache_element));
