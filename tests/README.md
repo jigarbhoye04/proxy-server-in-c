@@ -12,15 +12,21 @@ tests/
 ├── phase3_platform.ps1      # Phase 3: Cross-platform compatibility tests
 ├── phase4_cache.ps1          # Phase 4: Cache optimization tests
 ├── phase5_connection_pool.ps1 # Phase 5: Connection pooling tests
+├── phase6_modular.ps1        # Phase 6: Modular architecture tests
 ├── performance_benchmark.ps1  # Complete performance comparison
+├── run_all_tests.ps1         # Master test runner
 ├── test_requests/            # Sample HTTP requests for testing
 └── test_results/             # Test output logs
 ```
 
 ## Quick Start
 
-1. **Build the proxy server:**
+1. **Build the modular proxy server:**
    ```powershell
+   # Build modular version (recommended)
+   make -f Makefile_modular
+   
+   # Or build original monolithic version
    gcc -o proxy_server src/proxy_server_with_cache.c -lpthread -lws2_32
    ```
 
@@ -48,6 +54,7 @@ tests/
 - **Phase 3**: Cross-platform compatibility verified
 - **Phase 4**: 5-10x cache hit performance boost
 - **Phase 5**: 5-10x connection reuse performance improvement
+- **Phase 6**: Code modularization and readability improvements
 
 ## Architecture Validation
 
