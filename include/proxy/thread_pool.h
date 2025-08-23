@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-// PHASE 6: Thread Pool Module
+// Thread Pool Module
 // Manages worker threads and task queue for concurrent request handling
 
 #define MAX_CLIENTS 200

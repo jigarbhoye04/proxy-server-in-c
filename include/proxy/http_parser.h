@@ -3,7 +3,7 @@
 
 #include "../proxy_parse.h"
 
-// PHASE 6: HTTP Parser Module
+// HTTP Parser Module
 // Handles HTTP request parsing and header manipulation
 
 // Parser interface functions

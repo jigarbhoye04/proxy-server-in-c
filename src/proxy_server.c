@@ -48,15 +48,6 @@ int main(int argc, char *argv[]) {
     }
 
     printf("[SERVER] Proxy server successfully initialized\n");
-    printf("[SERVER] All optimization phases active:\n");
-    printf("[SERVER]   - Phase 1: Memory safety and error handling\n");
-    printf("[SERVER]   - Phase 2: Thread pool with %d workers\n", NUM_WORKER_THREADS);
-    printf("[SERVER]   - Phase 3: Cross-platform compatibility\n");
-    printf("[SERVER]   - Phase 4: O(1) hash table cache\n");
-    printf("[SERVER]   - Phase 5: Connection pooling\n");
-    printf("[SERVER]   - Phase 6: Modular architecture\n");
-    printf("[SERVER] ================================================\n");
-
     // (this will run indefinitely)
     proxy_server_start();
     proxy_server_shutdown();

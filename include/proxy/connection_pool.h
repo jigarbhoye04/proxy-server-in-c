@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <time.h>
 
-// PHASE 6: Connection Pool Module
+// Connection Pool Module
 // Manages persistent connections for improved performance
 
 #define MAX_POOL_SIZE 20

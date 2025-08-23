@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-// PHASE 6: Thread Pool Implementation
+// Thread Pool Implementation
 
 // Global synchronization primitives (declared as extern - defined in main)
 extern sem_t semaphore;

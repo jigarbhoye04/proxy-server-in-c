@@ -1,7 +1,7 @@
 #ifndef PROXY_SERVER_H
 #define PROXY_SERVER_H
 
-// PHASE 6: Main Proxy Server Module
+// Main Proxy Server Module
 // Core server logic and request handling
 
 #include "platform.h"

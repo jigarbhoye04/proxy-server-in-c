@@ -1,7 +1,7 @@
 #ifndef PROXY_PLATFORM_H
 #define PROXY_PLATFORM_H
 
-// PHASE 6: Platform Compatibility Module
+// Platform Compatibility Module
 // Abstracts Windows/Linux differences for networking and threading
 
 #ifdef _WIN32

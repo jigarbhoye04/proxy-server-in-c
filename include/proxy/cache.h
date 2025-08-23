@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <time.h>
 
-// PHASE 6: Cache Module
+// Cache Module
 // Optimized O(1) hash table cache with LRU eviction
 
 #define CACHE_SIZE 1024

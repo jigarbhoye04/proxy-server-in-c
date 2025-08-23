@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// PHASE 6: Cache Implementation
+// Cache Implementation
 
 // Hash function for URLs
 unsigned int cache_hash(const char* url) {

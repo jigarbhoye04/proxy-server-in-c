@@ -9,7 +9,7 @@
 #include <netdb.h>
 #endif
 
-// PHASE 6: Connection Pool Implementation
+// Connection Pool Implementation
 
 connection_pool_t* connection_pool_create(int max_size) {
     connection_pool_t* pool = malloc(sizeof(connection_pool_t));

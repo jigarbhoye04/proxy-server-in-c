@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-// PHASE 6: Platform Compatibility Implementation
+// Platform Compatibility Implementation
 
 #ifdef _WIN32
     // Windows socket initialization state

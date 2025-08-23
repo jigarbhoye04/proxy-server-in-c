@@ -4,12 +4,12 @@
 #include <string.h>
 #include <unistd.h>
 
-// PHASE 6: Core Proxy Server Implementation
+// Core Proxy Server Implementation
 
 int proxy_server_init(int port) {
     printf("[INIT] Initializing proxy server on port %d...\n", port);
 
-    // Phase 3: Initialize platform-specific networking
+    // Initialize platform-specific networking
     platform_init();
 
     // Initialize synchronization primitives
@@ -23,21 +23,21 @@ int proxy_server_init(int port) {
         return -1;
     }
 
-    // Phase 2: Initialize thread pool
+    // Initialize thread pool
     thread_pool = thread_pool_create();
     if (thread_pool == NULL) {
         printf("[INIT] Failed to create thread pool\n");
         return -1;
     }
 
-    // Phase 4: Initialize optimized cache
+    // Initialize optimized cache
     optimized_cache = cache_create();
     if (optimized_cache == NULL) {
         printf("[INIT] Failed to create optimized cache\n");
         return -1;
     }
 
-    // Phase 5: Initialize connection pool
+    // Initialize connection pool
     connection_pool = connection_pool_create(MAX_POOL_SIZE);
     if (connection_pool == NULL) {
         printf("[INIT] Failed to create connection pool\n");
@@ -122,7 +122,7 @@ int create_server_socket(int port) {
     struct sockaddr_in server_address;
     int reuse = 1;
 
-    // Create socket
+    // Socket creation
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
         print_socket_error("Socket creation failed");
@@ -137,7 +137,7 @@ int create_server_socket(int port) {
         return -1;
     }
 
-    // Setup server address
+    // Server address setup
     bzero(&server_address, sizeof(server_address));
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;

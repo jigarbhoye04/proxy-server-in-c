@@ -8,7 +8,7 @@
 #define strcasecmp _stricmp
 #endif
 
-// PHASE 6: HTTP Parser Implementation
+// HTTP Parser Implementation
 // Note: Enhanced implementation for proper proxy functionality
 
 struct ParsedRequest* ParsedRequest_create(void) {
