@@ -1,10 +1,10 @@
 # HTTP Proxy Server - Build Script
-# Compiles the modular proxy server with all components
+# Compiles the proxy server with all components
 
 Write-Host "================================================================" -ForegroundColor Green
 Write-Host "HTTP PROXY SERVER - BUILD SCRIPT" -ForegroundColor Green  
 Write-Host "================================================================" -ForegroundColor Green
-Write-Host "Building modular proxy server..." -ForegroundColor White
+Write-Host "Building proxy server..." -ForegroundColor White
 Write-Host ""
 
 # Build command

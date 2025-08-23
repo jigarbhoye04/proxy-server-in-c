@@ -15,8 +15,6 @@ A production-ready HTTP proxy server implemented in C with advanced performance 
 7. [Architecture](#architecture)
 8. [Configuration](#configuration)
 9. [Performance](#performance)
-10. [Contributing](#contributing)
-11. [License](#license)
 
 ## Overview
 
@@ -24,28 +22,23 @@ This HTTP proxy server demonstrates modern C programming practices with professi
 
 ## Features
 
-### 🚀 **High Performance**
+### **Performance**
 - **Multi-threaded Architecture**: 4 worker threads for concurrent request handling
 - **Connection Pooling**: Persistent connections reduce overhead by 5-10x
 - **Intelligent Caching**: O(1) hash table cache with LRU eviction for 3-20x speedup on repeated requests
 - **Memory Safety**: Comprehensive bounds checking and error handling
 
-### 🌐 **Cross-Platform Support**
+### **Cross-Platform Support**
 - **Windows**: Native Winsock2 implementation
 - **Linux/Unix**: POSIX sockets with standard threading
 - **Automatic Detection**: Platform-specific optimizations applied automatically
 
-### 📡 **Proxy Capabilities**
+### **Proxy Capabilities**
 - **HTTP/1.1 Protocol**: Full support for modern HTTP requests
 - **Request Parsing**: Robust HTTP request/response handling
 - **Header Management**: Complete header forwarding and modification support
 - **Error Handling**: Graceful handling of malformed requests and network errors
 
-### 🏗️ **Architecture**
-- **Modular Design**: Clean separation of concerns across 6 focused modules
-- **Easy Maintenance**: Each component can be modified independently
-- **Extensible**: Simple to add new features without affecting existing code
-- **Well-Documented**: Clear interfaces and comprehensive documentation
 
 ## Quick Start
 
@@ -84,33 +77,37 @@ make
 ```
 
 ### Project Structure
+
 ```
 proxy-server/
-├── include/                  # External dependencies  
-│   ├── proxy_parse.h        # HTTP parsing library
-│   ├── pthread.h           # Threading library (Windows)
-│   └── proxy/              # Custom headers
-│       ├── platform.h      # Cross-platform compatibility
-│       ├── http_parser.h   # HTTP request/response handling
-│       ├── thread_pool.h   # Multi-threading management
-│       ├── connection_pool.h # Connection reuse optimization
-│       ├── cache.h         # High-speed caching system
-│       └── proxy_server.h  # Core proxy logic
-├── src/                    # Source files
-│   ├── proxy_server.c      # Main entry point
-│   └── components/         # Implementation modules
-│       ├── platform.c      # Platform abstraction layer
-│       ├── http_parser.c   # HTTP protocol implementation
-│       ├── thread_pool.c   # Threading and task management
-│       ├── connection_pool.c # Connection management
-│       ├── cache.c         # Caching implementation
-│       └── proxy_server.c  # Core proxy functionality
-├── tests/                  # Test suite
-│   └── test_proxy.ps1     # Comprehensive test script
-├── build.ps1              # Windows build script
-├── Makefile               # Build configuration
-├── LINUX.md               # Linux/Unix specific instructions
-└── proxy_server.exe      # Compiled executable
+├── include/                       # External dependencies
+│   ├── pthread.h                  # Threading library (Windows)
+│   ├── proxy_parse.h              # HTTP parsing library
+│   └── proxy/                     # Custom headers
+│       ├── cache.h                # High-speed caching system
+│       ├── connection_pool.h      # Connection reuse optimization
+│       ├── http_parser.h          # HTTP request/response handling
+│       ├── platform.h             # Cross-platform compatibility
+│       ├── proxy_server.h         # Core proxy logic
+│       └── thread_pool.h          # Multi-threading management
+│
+├── src/                           # Source files
+│   ├── proxy_server.c             # Main entry point
+│   └── components/                # Implementation modules
+│       ├── cache.c                # Caching implementation
+│       ├── connection_pool.c      # Connection management
+│       ├── http_parser.c          # HTTP protocol implementation
+│       ├── platform.c             # Platform abstraction layer
+│       ├── proxy_server.c         # Core proxy functionality
+│       └── thread_pool.c          # Threading and task management
+│
+├── tests/                         # Test suite
+│   └── test_proxy.ps1             # Comprehensive test script
+│
+├── LINUX.md                       # Linux/Unix specific instructions
+├── Makefile                       # Build configuration
+├── build.ps1                      # Windows build script
+└── proxy_server.exe               # Compiled executable
 ```
 
 ## Usage
@@ -276,12 +273,8 @@ The proxy server provides detailed logging for:
 - **Thread Pool**: 4 workers handling concurrent requests
 - **Connection Pool**: 20 persistent connections reduce overhead
 
-
-
-
-
 ## Author
 
-**[Jigar Bhoye](https://github.com/jigarbhoye04)**
+**[Jigar](https://github.com/jigarbhoye04)**
 
 *High-performance HTTP proxy server demonstrating modern C programming practices with professional architecture, comprehensive testing, and cross-platform compatibility.*

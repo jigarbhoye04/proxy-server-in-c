@@ -1,11 +1,11 @@
-# HTTP Proxy Server - Comprehensive Test Suite
+# HTTP Proxy Server - Test Suite
 # Tests proxy functionality, caching performance, and connection handling
-# 
-# Usage: .\test_proxy_comprehensive.ps1
+#
+# Usage: .\test_proxy.ps1
 # Prerequisites: Proxy server must be running on port 8080
 
 Write-Host "================================================================" -ForegroundColor Green
-Write-Host "HTTP PROXY SERVER - COMPREHENSIVE TEST SUITE" -ForegroundColor Green
+Write-Host "HTTP PROXY SERVER - TEST SUITE" -ForegroundColor Green
 Write-Host "================================================================" -ForegroundColor Green
 Write-Host "Testing: Proxy functionality, Cache performance, Multi-threading" -ForegroundColor White
 Write-Host "Version: 1.0 - Production Ready" -ForegroundColor Gray
@@ -127,7 +127,8 @@ Write-Host "`n[TESTS] Running comprehensive proxy tests..." -ForegroundColor Cya
 $testSites = @(
     @{ URL = "http://example.com"; Name = "EXAMPLE.COM" },
     @{ URL = "http://httpbin.org/html"; Name = "HTTPBIN.ORG" },
-    @{ URL = "http://neverssl.com"; Name = "NEVERSSL.COM" }
+    @{ URL = "http://neverssl.com"; Name = "NEVERSSL.COM" },
+    @{ URL = "http://httpforever.com/"; Name = "HTTPFOREVER.COM" }
 )
 
 $allResults = @{}
@@ -139,7 +140,7 @@ foreach ($site in $testSites) {
     Start-Sleep -Seconds 1
 }
 
-# Generate comprehensive test report
+# Test report
 Write-Host "`n================================================================" -ForegroundColor Green
 Write-Host "TEST RESULTS SUMMARY" -ForegroundColor Green  
 Write-Host "================================================================" -ForegroundColor Green
@@ -158,16 +159,16 @@ foreach ($siteName in $allResults.Keys) {
             $excellentCacheCount++
             $cacheWorkingCount++
             $speedup = [math]::Round($result.Duration1 / $result.Duration2, 1)
-            Write-Host "   🚀 Cache performance: EXCELLENT (${speedup}x faster: $([math]::Round($result.Duration1))ms → $([math]::Round($result.Duration2))ms)" -ForegroundColor Green
+            Write-Host "    Cache performance: EXCELLENT (${speedup}x faster: $([math]::Round($result.Duration1))ms → $([math]::Round($result.Duration2))ms)" -ForegroundColor Green
         } elseif ($result.CacheWorking -eq "Good") {
             $cacheWorkingCount++
             $speedup = [math]::Round($result.Duration1 / $result.Duration2, 1)
-            Write-Host "   ⚡ Cache performance: GOOD (${speedup}x faster: $([math]::Round($result.Duration1))ms → $([math]::Round($result.Duration2))ms)" -ForegroundColor Yellow
+            Write-Host "    Cache performance: GOOD (${speedup}x faster: $([math]::Round($result.Duration1))ms → $([math]::Round($result.Duration2))ms)" -ForegroundColor Yellow
         } else {
-            Write-Host "   ⚠️  Cache performance: NEEDS ATTENTION" -ForegroundColor Red
+            Write-Host "     Cache performance: NEEDS ATTENTION" -ForegroundColor Red
         }
     } else {
-        Write-Host "❌ $siteName - Request errors encountered" -ForegroundColor Red
+        Write-Host "$siteName - Request errors encountered" -ForegroundColor Red
     }
 }
 
@@ -186,14 +187,14 @@ Write-Host "  • Cache functionality: $(if ($cacheWorkingCount -gt 0) { "✅ WO
 
 Write-Host "`nProxy Server Features Verified:" -ForegroundColor White
 if ($successCount -gt 0) {
-    Write-Host "  ✅ HTTP request parsing and forwarding" -ForegroundColor Green
-    Write-Host "  ✅ Multi-threaded connection handling" -ForegroundColor Green
-    Write-Host "  ✅ Connection pooling and reuse" -ForegroundColor Green
+    Write-Host "  HTTP request parsing and forwarding" -ForegroundColor Green
+    Write-Host "  Multi-threaded connection handling" -ForegroundColor Green
+    Write-Host "  Connection pooling and reuse" -ForegroundColor Green
     if ($cacheWorkingCount -gt 0) {
-        Write-Host "  ✅ O(1) hashmap caching with performance gains" -ForegroundColor Green
+        Write-Host "  O(1) hashmap caching with performance gains" -ForegroundColor Green
     }
-    Write-Host "  ✅ Cross-platform compatibility (Windows)" -ForegroundColor Green
-    Write-Host "  ✅ 5-second request timeout handling" -ForegroundColor Green
+    Write-Host "  Cross-platform compatibility (Windows)" -ForegroundColor Green
+    Write-Host "  5-second request timeout handling" -ForegroundColor Green
 }
 
 if ($cacheWorkingCount -gt 0) {
@@ -201,7 +202,7 @@ if ($cacheWorkingCount -gt 0) {
     Write-Host "   The server successfully forwards HTTP requests and provides" -ForegroundColor Green
     Write-Host "   significant performance improvements through intelligent caching." -ForegroundColor Green
 } else {
-    Write-Host "`n⚠️  PARTIAL SUCCESS: Proxy forwarding works, but cache needs attention." -ForegroundColor Yellow
+    Write-Host "`PARTIAL SUCCESS: Proxy forwarding works, but cache needs attention." -ForegroundColor Yellow
 }
 
 Write-Host "`n================================================================" -ForegroundColor Cyan

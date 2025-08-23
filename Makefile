@@ -54,7 +54,7 @@ clean:
 	rm -rf $(OBJDIR)
 	rm -f $(TARGET) proxy_server_original
 
-# Install dependencies (placeholder)
+# Install dependencies
 install-deps:
 	@echo "Installing dependencies..."
 	@echo "Make sure you have gcc and pthread libraries installed"
