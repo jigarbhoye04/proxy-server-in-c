@@ -3,8 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Windows compatibility for strcasecmp
+#ifdef _WIN32
+#define strcasecmp _stricmp
+#endif
+
 // PHASE 6: HTTP Parser Implementation
-// Note: This is a simplified implementation for modular architecture demonstration
+// Note: Enhanced implementation for proper proxy functionality
 
 struct ParsedRequest* ParsedRequest_create(void) {
     return (struct ParsedRequest*)calloc(1, sizeof(struct ParsedRequest));
@@ -25,10 +30,14 @@ void ParsedRequest_destroy(struct ParsedRequest *pr) {
 }
 
 int ParsedRequest_parse(struct ParsedRequest *parse, const char *buf, int buflen) {
-    // Simplified parser for demonstration - extracts basic HTTP request components
+    // Enhanced parser to extract Host header for proxy functionality
     if (!parse || !buf || buflen <= 0) {
+        printf("[PARSER] Invalid parameters\n");
         return -1;
     }
+    
+    printf("[PARSER] Parsing request of length %d\n", buflen);
+    printf("[PARSER] Request content: %.200s...\n", buf);
     
     // Store original buffer
     parse->buf = malloc(buflen + 1);
@@ -38,27 +47,101 @@ int ParsedRequest_parse(struct ParsedRequest *parse, const char *buf, int buflen
     parse->buf[buflen] = '\0';
     parse->buflen = buflen;
     
-    // Basic parsing - extract method, path, version
-    char* line = strtok(parse->buf, "\r\n");
-    if (!line) return -1;
+    // Find the end of the first line (request line)
+    char* line_end = strstr(parse->buf, "\r\n");
+    if (!line_end) {
+        printf("[PARSER] Failed to find end of request line\n");
+        return -1;
+    }
     
-    char* method = strtok(line, " ");
+    // Parse request line (make a copy to avoid modifying original)
+    int line_len = line_end - parse->buf;
+    char* request_line = malloc(line_len + 1);
+    strncpy(request_line, parse->buf, line_len);
+    request_line[line_len] = '\0';
+    
+    printf("[PARSER] Request line: %s\n", request_line);
+    
+    // Parse method, path, version
+    char* method = strtok(request_line, " ");
     char* path = strtok(NULL, " ");
     char* version = strtok(NULL, " ");
     
     if (method) {
         parse->method = malloc(strlen(method) + 1);
         strcpy(parse->method, method);
+        printf("[PARSER] Method: %s\n", parse->method);
     }
     
     if (path) {
         parse->path = malloc(strlen(path) + 1);
         strcpy(parse->path, path);
+        printf("[PARSER] Path: %s\n", parse->path);
     }
     
     if (version) {
         parse->version = malloc(strlen(version) + 1);
         strcpy(parse->version, version);
+        printf("[PARSER] Version: %s\n", parse->version);
+    }
+    
+    free(request_line);
+    
+    // Parse headers (start after the first \r\n)
+    printf("[PARSER] Looking for headers...\n");
+    char* headers_start = line_end + 2; // Skip \r\n
+    char* current_pos = headers_start;
+    
+    while (current_pos < parse->buf + buflen) {
+        // Find the end of current header line
+        char* header_end = strstr(current_pos, "\r\n");
+        if (!header_end) break;
+        
+        // Check for empty line (end of headers)
+        if (header_end == current_pos) break;
+        
+        // Extract header line
+        int header_len = header_end - current_pos;
+        char* header_line = malloc(header_len + 1);
+        strncpy(header_line, current_pos, header_len);
+        header_line[header_len] = '\0';
+        
+        printf("[PARSER] Header line: %s\n", header_line);
+        
+        // Parse header name and value
+        char* colon = strchr(header_line, ':');
+        if (colon) {
+            *colon = '\0';  // Split header name and value
+            char* header_name = header_line;
+            char* header_value = colon + 1;
+            
+            // Skip whitespace in header value
+            while (*header_value == ' ') header_value++;
+            
+            printf("[PARSER] Header: '%s' = '%s'\n", header_name, header_value);
+            
+            // Check for Host header
+            if (strcasecmp(header_name, "Host") == 0) {
+                parse->host = malloc(strlen(header_value) + 1);
+                strcpy(parse->host, header_value);
+                printf("[PARSER] Found Host header: %s\n", parse->host);
+                free(header_line);
+                break;
+            }
+        }
+        
+        free(header_line);
+        current_pos = header_end + 2; // Move to next line
+    }
+    
+    if (!parse->host) {
+        printf("[PARSER] WARNING: No Host header found!\n");
+    }
+    
+    // Set default port if not specified
+    if (!parse->port) {
+        parse->port = malloc(3);
+        strcpy(parse->port, "80");
     }
     
     return 0;

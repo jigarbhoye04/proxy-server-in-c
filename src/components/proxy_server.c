@@ -230,6 +230,7 @@ int send_error_response(int client_socket, int error_code, const char* message) 
 
 int forward_request_to_server(struct ParsedRequest* request, int client_socket) {
     if (!request || client_socket <= 0) {
+        printf("[FORWARD] Invalid parameters\n");
         return -1;
     }
 
@@ -238,14 +239,25 @@ int forward_request_to_server(struct ParsedRequest* request, int client_socket) 
     char request_buffer[MAX_REQUEST_SIZE];
     char response_buffer[MAX_RESPONSE_SIZE];
 
+    printf("[FORWARD] Request details - Method: %s, Path: %s, Host: %s\n", 
+           request->method ? request->method : "NULL",
+           request->path ? request->path : "NULL",
+           request->host ? request->host : "NULL");
+
     // Extract host and port from request
-    if (extract_host_port(request->host, host, &port) < 0) {
-        printf("[FORWARD] Failed to extract host and port\n");
+    if (!request->host || extract_host_port(request->host, host, &port) < 0) {
+        printf("[FORWARD] Failed to extract host and port from: %s\n", 
+               request->host ? request->host : "NULL");
         return -1;
     }
 
-    // Check cache first
-    cache_node_t* cached = cache_get(optimized_cache, request->path);
+    printf("[FORWARD] Extracted host: %s, port: %d\n", host, port);
+
+    // Check cache first (use full URL as cache key)
+    char cache_key[512];
+    snprintf(cache_key, sizeof(cache_key), "%s", request->path);
+    
+    cache_node_t* cached = cache_get(optimized_cache, cache_key);
     if (cached) {
         // Send cached response
         printf("[FORWARD] Sending cached response (%d bytes)\n", cached->data_size);
@@ -264,13 +276,29 @@ int forward_request_to_server(struct ParsedRequest* request, int client_socket) 
         }
     }
 
+    // Extract path from full URL for HTTP request
+    char actual_path[256] = "/";
+    if (strstr(request->path, "http://")) {
+        char* path_start = strstr(request->path + 7, "/");
+        if (path_start) {
+            strncpy(actual_path, path_start, sizeof(actual_path) - 1);
+            actual_path[sizeof(actual_path) - 1] = '\0';
+        }
+    } else if (request->path[0] == '/') {
+        strncpy(actual_path, request->path, sizeof(actual_path) - 1);
+        actual_path[sizeof(actual_path) - 1] = '\0';
+    }
+
     // Build and send request
     int request_len = snprintf(request_buffer, sizeof(request_buffer),
         "%s %s HTTP/1.1\r\n"
         "Host: %s\r\n"
-        "Connection: keep-alive\r\n"
+        "User-Agent: ProxyServer/1.0\r\n"
+        "Connection: close\r\n"
         "\r\n",
-        request->method, request->path, host);
+        request->method, actual_path, host);
+
+    printf("[FORWARD] Sending request to %s:%d: %s %s\n", host, port, request->method, actual_path);
 
     if (send(server_socket, request_buffer, request_len, 0) < 0) {
         print_socket_error("Failed to send request to server");
@@ -278,30 +306,73 @@ int forward_request_to_server(struct ParsedRequest* request, int client_socket) 
         return -1;
     }
 
-    // Receive response
+    // Receive response with proper HTTP handling
     int total_received = 0;
     int bytes_received;
+    int header_end_found = 0;
+    
+    // Set receive timeout to 5 seconds
+    #ifdef _WIN32
+    DWORD timeout = 5000; // 5 seconds in milliseconds
+    setsockopt(server_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+    #else
+    struct timeval timeout;
+    timeout.tv_sec = 5;
+    timeout.tv_usec = 0;
+    setsockopt(server_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    #endif
     
     while (total_received < MAX_RESPONSE_SIZE - 1) {
         bytes_received = recv(server_socket, 
                             response_buffer + total_received, 
                             MAX_RESPONSE_SIZE - total_received - 1, 0);
         if (bytes_received <= 0) {
-            break;
+            if (total_received > 0) {
+                // Some data received, break and use what we have
+                printf("[FORWARD] Connection closed by server, using %d bytes\n", total_received);
+                break;
+            } else {
+                printf("[FORWARD] No data received from server\n");
+                socket_close(server_socket);
+                return -1;
+            }
         }
         total_received += bytes_received;
+        
+        // Check for end of HTTP headers to determine if we got a complete response
+        if (!header_end_found && total_received >= 4) {
+            response_buffer[total_received] = '\0';
+            if (strstr(response_buffer, "\r\n\r\n")) {
+                header_end_found = 1;
+                // For simple responses, we might have everything
+                if (total_received < 2048) {
+                    break;
+                }
+            }
+        }
+        
+        // If we've received a good amount and headers are complete, break
+        if (header_end_found && total_received > 1024) {
+            break;
+        }
     }
 
     if (total_received > 0) {
         response_buffer[total_received] = '\0';
         
+        printf("[FORWARD] Received %d bytes from %s:%d\n", total_received, host, port);
+        
         // Send response to client
-        send(client_socket, response_buffer, total_received, 0);
+        int sent = send(client_socket, response_buffer, total_received, 0);
+        if (sent < 0) {
+            print_socket_error("Failed to send response to client");
+        } else {
+            printf("[FORWARD] Sent %d bytes to client\n", sent);
+        }
         
-        // Cache the response
-        cache_add(optimized_cache, request->path, response_buffer, total_received);
-        
-        printf("[FORWARD] Forwarded %d bytes from %s:%d\n", total_received, host, port);
+        // Cache the response using full URL as key
+        cache_add(optimized_cache, cache_key, response_buffer, total_received);
+        printf("[CACHE] Added entry for URL: %s (size: %d bytes)\n", cache_key, total_received);
     }
 
     // Return connection to pool

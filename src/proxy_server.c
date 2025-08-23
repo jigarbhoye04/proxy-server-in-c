@@ -1,6 +1,3 @@
-// PHASE 6: Modular Proxy Server Main
-// Clean, readable main server implementation using modular components
-
 #include "../include/proxy/proxy_server.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,10 +57,8 @@ int main(int argc, char *argv[]) {
     printf("[SERVER]   - Phase 6: Modular architecture\n");
     printf("[SERVER] ================================================\n");
 
-    // Start the server (this will run indefinitely)
+    // (this will run indefinitely)
     proxy_server_start();
-
-    // This should not be reached unless server shuts down
     proxy_server_shutdown();
     return 0;
 }

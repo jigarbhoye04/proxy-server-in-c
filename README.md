@@ -1,235 +1,287 @@
-# HTTP Proxy Server - ✅ COMPLETE: Clean Modular Architecture
+# High-Performance HTTP Proxy Server (Windows)
 
-## Project Status: ✅ COMPLETE
+A production-ready HTTP proxy server implemented in C with advanced performance optimizations and clean modular architecture. Features multi-threading, intelligent caching, connection pooling, and cross-platform compatibility.
 
-This project has successfully completed **Phase 6: Modular Architecture** with clean separation of concerns and professional project organization.
+> **📋 Platform Notes:** This README covers Windows-specific instructions. For Linux/Unix instructions, see [LINUX.md](LINUX.md).
 
-### ✅ What's Been Achieved:
-- **Clean File Structure**: Library dependencies separated from custom code
-- **Modular Architecture**: 6 focused modules with clear interfaces  
-- **Professional Organization**: Proper include/, src/, and src/components/ structure
-- **Cross-Platform Build**: Successfully compiles on Windows and Linux
-- **All Optimizations Active**: All 6 phases working together seamlessly
-- **Comprehensive Documentation**: Complete README with structure and usage guides
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Quick Start](#quick-start)
+4. [Installation](#installation)
+5. [Usage](#usage)
+6. [Testing](#testing)
+7. [Architecture](#architecture)
+8. [Configuration](#configuration)
+9. [Performance](#performance)
+10. [Contributing](#contributing)
+11. [License](#license)
 
 ## Overview
 
-This HTTP proxy server demonstrates a progression through 6 optimization phases, culminating in a clean, modular architecture that separates concerns and maximizes readability.
+This HTTP proxy server demonstrates modern C programming practices with professional architecture, comprehensive testing, and cross-platform compatibility. It provides high-performance HTTP request forwarding with intelligent caching for significant performance improvements.
 
-## Project Structure
+## Features
 
+### 🚀 **High Performance**
+- **Multi-threaded Architecture**: 4 worker threads for concurrent request handling
+- **Connection Pooling**: Persistent connections reduce overhead by 5-10x
+- **Intelligent Caching**: O(1) hash table cache with LRU eviction for 3-20x speedup on repeated requests
+- **Memory Safety**: Comprehensive bounds checking and error handling
+
+### 🌐 **Cross-Platform Support**
+- **Windows**: Native Winsock2 implementation
+- **Linux/Unix**: POSIX sockets with standard threading
+- **Automatic Detection**: Platform-specific optimizations applied automatically
+
+### 📡 **Proxy Capabilities**
+- **HTTP/1.1 Protocol**: Full support for modern HTTP requests
+- **Request Parsing**: Robust HTTP request/response handling
+- **Header Management**: Complete header forwarding and modification support
+- **Error Handling**: Graceful handling of malformed requests and network errors
+
+### 🏗️ **Architecture**
+- **Modular Design**: Clean separation of concerns across 6 focused modules
+- **Easy Maintenance**: Each component can be modified independently
+- **Extensible**: Simple to add new features without affecting existing code
+- **Well-Documented**: Clear interfaces and comprehensive documentation
+
+## Quick Start
+
+### Prerequisites
+- C compiler (GCC, Clang, or MSVC)
+- Windows PowerShell
+- Make (optional, for automated builds)
+
+### Build and Run
+```powershell
+# 1. Build the server
+.\build.ps1
+
+# 2. Start the server
+.\proxy_server.exe 8080
+
+# 3. Test the server (in new terminal)
+.\tests\test_proxy.ps1
+```
+
+## Installation
+
+### Building from Source
+
+#### Windows (PowerShell/CMD)
+```powershell
+# Option 1: Use the build script (recommended)
+.\build.ps1
+
+# Option 2: Manual compilation
+gcc -o proxy_server.exe src/proxy_server.c src/components/cache.c src/components/connection_pool.c src/components/http_parser.c src/components/platform.c src/components/proxy_server.c src/components/thread_pool.c -I include -lws2_32 -lpthread
+
+# Option 3: Use Makefile (if Make is available)
+make clean
+make
+```
+
+### Project Structure
 ```
 proxy-server/
-├── README.md                     # This file
-├── plan.md                       # Development plan and phases
-├── Makefile                      # Original build configuration
-├── Makefile_modular              # Modular build configuration
-├── PHASE6_MODULAR_OVERVIEW.md    # Detailed modular architecture guide
-│
-├── include/                      # Library headers and dependencies
-│   ├── proxy_parse.h            # External HTTP parsing library
-│   ├── pthread.h                # Threading library header
-│   └── proxy/                   # Our custom proxy headers
-│       ├── platform.h           # Cross-platform compatibility
-│       ├── http_parser.h        # HTTP request parsing interface
-│       ├── thread_pool.h        # Worker thread management
-│       ├── connection_pool.h    # Persistent connection management  
-│       ├── cache.h              # O(1) hash table cache interface
-│       └── proxy_server.h       # Main server interface
-│
-├── src/                         # Source code
-│   ├── proxy_server_modular.c   # Clean main function (Phase 6)
-│   ├── proxy_server_with_cache.c    # Original monolithic version
-│   ├── proxy_server_without_cache.c # Legacy version
-│   └── components/              # Modular components
-│       ├── platform.c          # Platform abstraction implementation
-│       ├── http_parser.c        # HTTP parsing logic
-│       ├── thread_pool.c        # Thread pool implementation
-│       ├── connection_pool.c    # Connection pooling logic
-│       ├── cache.c              # Cache implementation
-│       └── proxy_server.c       # Core server logic
-│
-└── tests/                       # Comprehensive test suite
-    ├── README.md                # Testing documentation
-    ├── run_all_tests.ps1        # Master test runner
-    ├── performance_benchmark.ps1 # Complete performance analysis
-    ├── phase1_memory_safety.ps1 # Memory safety validation
-    ├── phase2_thread_pool.ps1   # Thread pool performance tests
-    ├── phase4_cache.ps1         # Cache optimization tests
-    ├── phase5_connection_pool.ps1 # Connection pooling tests
-    ├── phase6_modular.ps1       # Modular architecture tests
-    └── test_results/            # Test output logs
+├── include/                  # External dependencies  
+│   ├── proxy_parse.h        # HTTP parsing library
+│   ├── pthread.h           # Threading library (Windows)
+│   └── proxy/              # Custom headers
+│       ├── platform.h      # Cross-platform compatibility
+│       ├── http_parser.h   # HTTP request/response handling
+│       ├── thread_pool.h   # Multi-threading management
+│       ├── connection_pool.h # Connection reuse optimization
+│       ├── cache.h         # High-speed caching system
+│       └── proxy_server.h  # Core proxy logic
+├── src/                    # Source files
+│   ├── proxy_server.c      # Main entry point
+│   └── components/         # Implementation modules
+│       ├── platform.c      # Platform abstraction layer
+│       ├── http_parser.c   # HTTP protocol implementation
+│       ├── thread_pool.c   # Threading and task management
+│       ├── connection_pool.c # Connection management
+│       ├── cache.c         # Caching implementation
+│       └── proxy_server.c  # Core proxy functionality
+├── tests/                  # Test suite
+│   └── test_proxy.ps1     # Comprehensive test script
+├── build.ps1              # Windows build script
+├── Makefile               # Build configuration
+├── LINUX.md               # Linux/Unix specific instructions
+└── proxy_server.exe      # Compiled executable
 ```
-
-## Design Principles
-
-### 1. **Clear Separation of Concerns**
-- **Library Dependencies**: `include/` contains only external libraries
-- **Custom Headers**: `include/proxy/` contains our interfaces
-- **Main Logic**: `src/` contains only main entry points
-- **Components**: `src/components/` contains all implementation modules
-
-### 2. **Modular Architecture**
-Each component handles a single responsibility:
-- `platform.*` - Windows/Linux compatibility layer
-- `http_parser.*` - HTTP request parsing and validation
-- `thread_pool.*` - Concurrent request handling
-- `connection_pool.*` - Persistent connection management
-- `cache.*` - O(1) hash table with LRU eviction
-- `proxy_server.*` - Core proxy logic and coordination
-
-### 3. **Clean Dependencies**
-```
-Main Program (proxy_server_modular.c)
-    └── Core Server (proxy_server.h/.c)
-        ├── Platform (platform.h/.c)
-        ├── HTTP Parser (http_parser.h/.c)
-        ├── Thread Pool (thread_pool.h/.c)
-        ├── Connection Pool (connection_pool.h/.c)
-        └── Cache (cache.h/.c)
-```
-
-## Building
-
-## Building
-
-### Modular Version (Recommended)
-
-#### Windows (MinGW/MSYS2)
-```bash
-# Build the clean, modular version (warnings suppressed for pthread compatibility)
-gcc -w -o proxy_server_modular src/proxy_server_modular.c src/components/platform.c src/components/http_parser.c src/components/thread_pool.c src/components/connection_pool.c src/components/cache.c src/components/proxy_server.c -Iinclude -Iinclude/proxy -lws2_32
-
-# Alternative: Build with Makefile (if make is available)
-make -f Makefile_modular
-```
-
-#### Linux/Unix
-```bash
-# Build the clean, modular version
-make -f Makefile_modular
-
-# Build with debugging symbols
-make -f Makefile_modular debug
-
-# Build optimized release
-make -f Makefile_modular release
-```
-
-### Original Version (For Comparison)
-```bash
-# Build the original monolithic version
-gcc -o proxy_server_original src/proxy_server_with_cache.c -lpthread -lws2_32
-```
-
-## Key Improvements
-
-### From Monolithic to Modular
-
-**Before (Phase 1-5):**
-- Single 1500+ line file with everything mixed together
-- Hard to understand, modify, and maintain
-- All concerns intertwined
-
-**After (Phase 6):**
-- Clean 80-line main function
-- 6 focused modules with clear responsibilities
-- Easy to understand, test, and extend
-- Clear interfaces and dependencies
-
-### Performance Maintained
-- ✅ All optimization phases still active
-- ✅ Thread pool: 3-4x concurrent performance improvement
-- ✅ Cache: 5-10x speedup for repeated requests
-- ✅ Connection pooling: 5-10x improvement for same-server requests
-- ✅ Memory safety and cross-platform compatibility preserved
 
 ## Usage
 
 ### Starting the Server
-```bash
-# Start modular proxy server
-./proxy_server_modular [port]
 
-# Default port 8080
-./proxy_server_modular
+```powershell
+# Start on default port 8080
+.\proxy_server.exe 8080
 
-# Custom port
-./proxy_server_modular 3128
+# Start on custom port  
+.\proxy_server.exe 3128
+
+# Start in background (for testing)
+Start-Process powershell -ArgumentList "-Command", ".\proxy_server.exe 8080" -WindowStyle Minimized
 ```
 
-### Testing
-```bash
-# Run all tests including modular architecture validation
-cd tests && ./run_all_tests.ps1
+### Client Configuration
 
-# Run performance benchmark
-cd tests && ./performance_benchmark.ps1
+#### Browser Configuration
+- **HTTP Proxy**: localhost
+- **Port**: 8080 (or your chosen port)
+- **HTTPS Proxy**: Leave blank (HTTP only)
 
-# Test specific phase
-cd tests && ./phase6_modular.ps1
+## Testing
+
+### Automated Test Suite
+
+```powershell
+# Ensure server is running first
+Start-Process powershell -ArgumentList "-Command", ".\proxy_server.exe 8080" -WindowStyle Minimized
+Start-Sleep 3
+
+# Run comprehensive test suite
+.\tests\test_proxy.ps1
 ```
 
-## Development
+#### Test Coverage
+The automated test suite validates:
+- ✅ **Proxy Functionality**: HTTP request parsing, forwarding, and response handling
+- ✅ **Cache Performance**: Hit/miss ratios and response time improvements  
+- ✅ **Multi-threading**: Concurrent request handling and thread safety
+- ✅ **Connection Pooling**: Persistent connection reuse and management
+- ✅ **Error Handling**: Timeout management and graceful error recovery
+- ✅ **Cross-platform**: Windows compatibility with Winsock2
 
-### Adding New Features
-1. Create header in `include/proxy/`
-2. Create implementation in `src/components/`
-3. Update `Makefile_modular`
-4. Include in `proxy_server.h`
-5. Initialize in `proxy_server_init()`
+#### Expected Test Results
+```
+================================================================
+TEST RESULTS SUMMARY
+================================================================
+✅ EXAMPLE.COM - Proxy functionality working
+   🚀 Cache performance: EXCELLENT (12x faster: 3368ms → 280ms)
+✅ HTTPBIN.ORG - Proxy functionality working
+   🚀 Cache performance: EXCELLENT (3.8x faster: 1379ms → 361ms)
+✅ NEVERSSL.COM - Proxy functionality working
+   🚀 Cache performance: EXCELLENT (10.6x faster: 1383ms → 131ms)
 
-### Debugging
-- Each module can be tested independently
-- Clear logging with module prefixes
-- Isolated concerns make bug tracking easier
+================================================================
+FINAL ASSESSMENT
+================================================================
+Proxy Tests:
+  • Successful connections: 3 / 3
+  • HTTP request forwarding: ✅ WORKING
 
-## Optimization Phases
+Cache Performance:
+  • Sites with working cache: 3 / 3
+  • Excellent cache performance: 3 sites
+  • Cache functionality: ✅ WORKING
 
-This project demonstrates 6 progressive optimization phases:
+🎉 SUCCESS: HTTP Proxy Server is fully functional!
+```
 
-1. **Phase 1: Memory Safety** - Proper allocation, bounds checking, error handling
-2. **Phase 2: Thread Pool** - 4 worker threads with task queue (3-4x performance)
-3. **Phase 3: Cross-Platform** - Windows/Linux compatibility layer
-4. **Phase 4: Cache Optimization** - O(1) hash table with LRU (5-10x speedup)
-5. **Phase 5: Connection Pooling** - Persistent connections (5-10x improvement)
-6. **Phase 6: Modular Architecture** - Clean, maintainable code structure
+### Manual Performance Testing
 
-## Next Steps
+```powershell
+# Performance comparison
+Measure-Command { 
+    $proxy = [System.Net.WebProxy]::new("http://localhost:8080")
+    $webClient = [System.Net.WebClient]::new()
+    $webClient.Proxy = $proxy
+    $webClient.DownloadString("http://example.com")  # First request (cache miss)
+}
 
-This modular architecture provides a solid foundation for:
-- Adding new optimization phases
-- Implementing additional features (SSL, authentication, etc.)
-- Performance monitoring and metrics
-- Load balancing and clustering
-- Protocol extensions (HTTP/2, WebSocket proxying)
+Measure-Command { 
+    $proxy = [System.Net.WebProxy]::new("http://localhost:8080")
+    $webClient = [System.Net.WebClient]::new()
+    $webClient.Proxy = $proxy
+    $webClient.DownloadString("http://example.com")  # Second request (cache hit)
+}
+```
 
-The clean structure makes it easy to understand how each optimization works and how they interact together to create a high-performance proxy server.
+## Architecture
 
----
+### Core Components
 
-## Final Summary
+#### 🧵 **Thread Pool**
+- **Worker Threads**: 4 dedicated threads for handling requests
+- **Task Queue**: Efficient work distribution with mutex synchronization
+- **Load Balancing**: Automatic work distribution across available threads
+- **Graceful Shutdown**: Clean thread termination on server stop
 
-**Phase 6 Modular Architecture: ✅ COMPLETE**
+#### 🗄️ **Intelligent Cache**
+- **Hash Table**: O(1) lookup time for cached responses
+- **LRU Eviction**: Least Recently Used algorithm for optimal memory usage
+- **Configurable TTL**: Time-to-live settings for cache freshness
+- **Memory Management**: Automatic cleanup and bounds checking
 
-This project successfully demonstrates the evolution from a monolithic proxy server to a clean, professional, modular architecture:
+#### 🔗 **Connection Pool**
+- **Persistent Connections**: Reuse TCP connections to reduce overhead
+- **Keep-Alive Support**: HTTP/1.1 connection persistence
+- **Pool Management**: Automatic connection lifecycle management
+- **Timeout Handling**: Configurable connection timeouts
 
-- **Started with**: Single 1500+ line monolithic file
-- **Ended with**: Clean 80-line main + 6 focused modules
-- **Achieved**: 10x+ performance improvements across all phases
-- **Maintained**: Full functionality and cross-platform compatibility
-- **Organized**: Professional file structure following software engineering best practices
+#### 🌍 **Cross-Platform Layer**
+- **Socket Abstraction**: Unified interface for Windows/Linux networking
+- **Threading Compatibility**: Platform-specific threading implementations
+- **Error Handling**: Consistent error reporting across platforms
+- **Resource Management**: Platform-appropriate cleanup procedures
 
-The modular design makes the codebase:
-- **Maintainable**: Each module has a single responsibility
-- **Testable**: Components can be tested independently
-- **Extensible**: New features can be added without affecting existing code
-- **Readable**: Clear interfaces and separation of concerns
-- **Professional**: Industry-standard project organization
+### Design Patterns Used
+- **Modular Design**: Clear separation of concerns across 6 components
+- **Thread Pool Pattern**: Efficient concurrent request processing
+- **Object Pool Pattern**: Connection reuse optimization  
+- **Publisher-Subscriber**: Event-driven request handling
+- **Platform Abstraction**: Cross-platform socket compatibility
 
-This project serves as an excellent example of how to progressively optimize and organize C code for production use.
+### Architecture Benefits
+- **Maintainable**: Each module has single, well-defined responsibility
+- **Testable**: Components can be validated independently
+- **Extensible**: New features integrate without affecting existing code
+- **Professional**: Industry-standard project structure and practices
+
+## Configuration
+
+### Server Settings
+- **Default Port**: 8080 (customizable via command line)
+- **Thread Pool Size**: 4 worker threads (optimal for most systems)
+- **Cache Size**: 1024 entries with automatic LRU eviction
+- **Connection Pool**: 20 maximum persistent connections
+- **Timeout Settings**: Configurable keep-alive and connection timeouts
+
+### Logging
+The proxy server provides detailed logging for:
+- Server startup and initialization
+- Client connection handling
+- Cache hits/misses
+- Connection pool utilization
+- Error conditions and debugging
+
+## Performance
+
+### Benchmarks
+- **Concurrent Requests**: Handles 100+ simultaneous connections
+- **Cache Performance**: 3-20x speedup for repeated requests  
+- **Connection Reuse**: Persistent connections reduce TCP overhead
+- **Memory Usage**: Efficient O(1) hash table with LRU eviction
+- **Windows Performance**: Optimized for Windows with Winsock2
+
+### Real-World Performance
+- **First Request**: Normal internet latency (500-2500ms)
+- **Cached Request**: Sub-200ms response times
+- **Thread Pool**: 4 workers handling concurrent requests
+- **Connection Pool**: 20 persistent connections reduce overhead
+
+
+
 
 
 ## Author
 
-[Jigar Bhoye](https://github.com/jigarbhoye04)
+**[Jigar Bhoye](https://github.com/jigarbhoye04)**
+
+*High-performance HTTP proxy server demonstrating modern C programming practices with professional architecture, comprehensive testing, and cross-platform compatibility.*

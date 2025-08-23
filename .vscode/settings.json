@@ -8,6 +8,7 @@
     "files.associations": {
         "*.env.local": "env",
         "*.env": "env",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "proxy_server.h": "c"
     }
 }
