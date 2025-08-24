@@ -20,6 +20,8 @@ A production-ready HTTP proxy server implemented in C with advanced performance 
 
 This HTTP proxy server demonstrates modern C programming practices with professional architecture, comprehensive testing, and cross-platform compatibility. It provides high-performance HTTP request forwarding with intelligent caching for significant performance improvements.
 
+> Flowcharts illustrating the server's architecture and request processing are available in the [FLOWCHART](FLOWCHART.md) and in [ARCHITECTURE](ARCHITECTURE.md) file.
+
 ## Features
 
 ### **Performance**
